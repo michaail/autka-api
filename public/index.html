@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Autka Web</title>
+  </head>
+  <body>
+
+    <h1>Copart scraper db viewer</h1>
+    <div id="homepage">
+      <h2>lorem ipsum sit dolor fecit</h2>
+      <div id="lots"></div>
+    </div>
+
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react@16/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script> -->
+
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script src="https://unpkg.com/react@15/dist/react.js"></script>
+    <script src="https://unpkg.com/react-dom@15/dist/react-dom.min.js"></script>
+
+    <!-- <script type="text/babel">
+      const Lots = React.createClass({
+        getInitialState: () => {
+          return({
+            lots: []
+          });
+        },
+        render: () => {
+          let lots = this.state.lots;
+          lots = lots.map(function(lot, index) {
+            return(
+              <li key={index}>
+                <span className={lot.available}></span>
+                <span className="lotID">{lot.lotID}</span>
+                <span className="make">{lot.obj.make}</span>  
+                <span className="model">{lot.obj.model}</span>
+                <span className="price">{lot.obj.mdoel}</span>
+              </li>
+            );
+          });
+          return(
+            <div id="lot-container">
+              <form id="search" onSubmit={this.handleSubmit}>
+                <label>Enter lotID:</label>
+                <input type="text" ref="lot-id" placeholder="lotID" required />
+                <label>Enter make:</label>
+                <input type="text" ref="make" placeholder="make" required />
+                <label>Enter your model:</label>
+                <input type="text" ref="model" placeholder="model" required />
+                
+                <input type="submit" value="Find Lot(s)" />
+              </form>
+              <ul>{lots}</ul>
+            </div>
+          );
+        },
+        handleSubmit: function(e){
+          e.preventDefault();
+          let queryString = '';
+          let letID  = this.refs.lot-id.value;
+          let make = this.refs.make.value;
+          let model = this.refs.model;
+
+          if (make) {
+            queryString = queryString + "?make=" + make;
+          }
+
+          var lat = this.refs.lat.value;
+          fetch('/api/lots' + queryString).then(function(data){
+            return data.json();
+          }).then( json => {
+            this.setState({
+              lots: json
+            });
+            console.log(json);
+          });
+        }
+      });
+      ReactDOM.render(<Lots />, document.getElementById('lots'));
+    
+    </script> -->
+
+    <script type="text/babel">
+      var Lots = React.createClass({
+          getInitialState: function(){
+              return({
+                  lots: []
+              });
+          },
+          render: function(){
+              var lots = this.state.lots;
+              lots = lots.map(function(lot, index){
+                  return(
+                      <li key={index}>
+                          
+                          <span className="make">{lot}</span>
+                      </li>
+                  );
+              });
+              return(
+                  <div id="lot-container">
+                      <form id="search" onSubmit={this.handleSubmit}>
+                          <label>Enter LotID:</label>
+                          <input type="text" ref="lotidr" placeholder="lotID" />
+                          <label>Enter make:</label>
+                          <input type="text" ref="maker" placeholder="maker" />
+                          <label>Enter model:</label>
+                          <input type="text" ref="modelr" placeholder="model" />
+                          <input type="submit" value="Find lots" />
+                      </form>
+                      <ul>{lots}</ul>
+                  </div>
+              );
+          },
+          handleSubmit: function(e){
+              e.preventDefault();
+              var queryString = '';
+
+              var lotidr = this.refs.lotidr.value;
+              var maker = this.refs.maker.value;
+              var modelr = this.refs.modelr.value;
+
+              if (lotidr) {
+                queryString = queryString + '/' + lotidr;
+              }
+
+              fetch('/api/lots' ).then(function(data){
+                  //console.log(data.json());
+                  data.json().then(d => {
+                    console.log(d);
+                    return d;
+                  })
+              }).then(json => {
+                  this.setState({
+                      lots: json
+                  });
+                  console.log(json);
+              });
+          }
+      });
+      ReactDOM.render(<Lots />, document.getElementById('lots'));
+      </script>
+
+  </body>
+</html>
