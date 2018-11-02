@@ -48,7 +48,7 @@ exports.findAll = async (req, res) => {
   
 
   const lotPromise = Lot.paginate(queryJSON, {
-    limit:  req.query.per_page || 40,
+    limit:  req.query.per_page || 4000,
     page:   req.query.page     || 1
   });
   const countPromise = Lot.count();
