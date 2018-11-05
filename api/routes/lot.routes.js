@@ -1,6 +1,6 @@
-module.exports = function (app) {
-  const lots = require('../controllers/lot.controller');
+const lots = require('../controllers/lot.controller');
 
+module.exports = (app) => {
   // GET    - return all lots
   app.get('/api/lots', lots.findAll);
 
@@ -15,9 +15,4 @@ module.exports = function (app) {
 
   // DELETE - delete single lot with lotID
   // app.delete('/api/lots/:lotID', lots.delete);
-
-
-
-
-  
-}
+};
