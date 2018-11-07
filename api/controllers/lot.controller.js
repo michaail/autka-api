@@ -1,5 +1,6 @@
 const Lot = require('../../models/lot');
 
+// eslint-disable-next-line consistent-return
 function create(req, res) {
   if (!req.body.lotID) {
     return res.status(400).send({
@@ -10,7 +11,9 @@ function create(req, res) {
   const lot = new Lot(req.body);
 
   lot.save()
-    .then((data) => res.send(data)).catch((err) => {
+    .then((data) => {
+      res.send(data);
+    }).catch((err) => {
       res.status(500).send({
         message: err.message || 'Something went wrong whilst saving lot',
       });
@@ -76,7 +79,7 @@ function findOne(req, res) {
         });
       }
 
-      res.send([lot]);
+      return res.send([lot]);
     })
     .catch(() => res.status(500).send({
       message: `Error something went wrong whilst get lot with id: ${req.params.lotID}`,
@@ -86,14 +89,14 @@ function findOne(req, res) {
 function update(req, res) {
   Lot.findOneAndUpdate({ lotID: req.params.lotID },
     req.body,
-    { new: true }) // zwracazmodyfikowany dokument do then()
+    { new: true }) // zwraca zmodyfikowany dokument do then()
     .then((lot) => {
       if (!lot) {
         return res.status(404).send({
           message: `No lot with id: ${req.params.lotID}`,
         });
       }
-      res.send(lot);
+      return res.send(lot);
     }).catch((err) => {
       if (err.kind === 'ObjectId') {
         return res.status(404).send({
@@ -114,7 +117,7 @@ function deleteOne(req, res) {
           message: `user${req.params.lotID}`,
         });
       }
-      res.send({ message: 'Lot deleted!' });
+      return res.send({ message: 'Lot deleted!' });
     })
     .catch((err) => {
       if (err.kind === 'ObjectId' || err.name === 'NotFound') {
