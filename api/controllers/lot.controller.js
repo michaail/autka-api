@@ -48,10 +48,10 @@ async function findAll(req, res) {
 
 
   const lotPromise = Lot.paginate(queryJSON, {
-    limit: req.query.per_page || 4000,
+    limit: req.query.per_page || 20,
     page: req.query.page || 1,
   });
-  const countPromise = Lot.count();
+  const countPromise = Lot.countDocuments();
   // TODO try catch?
   const [lots, count] = await Promise.all([lotPromise, countPromise]);
   const links = {};
