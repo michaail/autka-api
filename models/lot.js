@@ -26,4 +26,9 @@ const lotSchema = new Schema({
 lotSchema.plugin(mongoosePaginate);
 // lotSchema.plugin(mongoPaginate.mongoosePlugin);
 
+module.exports.Lot = {
+  model: mongoose.model('Lot', lotSchema),
+};
+
+
 module.exports = mongoose.model('Lot', lotSchema);
