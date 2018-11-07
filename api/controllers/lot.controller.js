@@ -1,6 +1,6 @@
 const Lot = require('../../models/lot');
 
-exports.create = (req, res) => {
+function create(req, res) {
   if (!req.body.lotID) {
     return res.status(400).send({
       message: "Lot can't be created without lotID",
@@ -10,16 +10,14 @@ exports.create = (req, res) => {
   const lot = new Lot(req.body);
 
   lot.save()
-    .then((data) => {
-      res.send(data);
-    }).catch((err) => {
+    .then((data) => res.send(data)).catch((err) => {
       res.status(500).send({
         message: err.message || 'Something went wrong whilst saving lot',
       });
     });
-};
+}
 
-exports.findAll = async (req, res) => {
+async function findAll(req, res) {
   const queryJSON = {};
   let linksString = '';
   if (req.query.make) {
@@ -67,9 +65,9 @@ exports.findAll = async (req, res) => {
   res.set('total-count', count);
   res.set('docs-length', lots.docs.length);
   return res.status(200).send(lots.docs);
-};
+}
 
-exports.findOne = (req, res) => {
+function findOne(req, res) {
   Lot.findOne({ lotID: req.params.lotID })
     .then((lot) => {
       if (!lot) {
@@ -83,9 +81,9 @@ exports.findOne = (req, res) => {
     .catch(() => res.status(500).send({
       message: `Error something went wrong whilst get lot with id: ${req.params.lotID}`,
     }));
-};
+}
 
-exports.update = (req, res) => {
+function update(req, res) {
   Lot.findOneAndUpdate({ lotID: req.params.lotID },
     req.body,
     { new: true }) // zwracazmodyfikowany dokument do then()
@@ -106,9 +104,9 @@ exports.update = (req, res) => {
         message: `Error with update lot with id: ${req.params.lotID}`,
       });
     });
-};
+}
 
-exports.delete = (req, res) => {
+function deleteOne(req, res) {
   Lot.findOneAndRemove({ lotID: req.params.lotID })
     .then((lot) => {
       if (!lot) {
@@ -128,4 +126,10 @@ exports.delete = (req, res) => {
         message: `Error with delete lot with id: ${req.params.lotID}`,
       });
     });
-};
+}
+
+module.exports.create = create;
+module.exports.findAll = findAll;
+module.exports.findOne = findOne;
+module.exports.update = update;
+module.exports.deleteOne = deleteOne;
