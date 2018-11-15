@@ -8,7 +8,7 @@ function create(req, res) {
     });
   }
 
-  const make = new Make({ make: req.body.make });
+  const make = new Make(req.body);
 
   make.save()
     .then((createdMake) => {

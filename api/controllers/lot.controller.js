@@ -24,19 +24,19 @@ async function findAll(req, res) {
   const queryJSON = {};
   let linksString = '';
   if (req.query.make) {
-    queryJSON.make = req.query.make;
+    queryJSON.make = req.query.make.toUpperCase();
     linksString += `&make=${req.query.make}`;
   }
   if (req.query.model) {
-    queryJSON.model = req.query.model;
+    queryJSON.model = req.query.model.toUpperCase();
     linksString += `&model=${req.query.model}`;
   }
   if (req.query.saleType) {
-    queryJSON.saleType = req.query.saleType;
+    queryJSON.saleType = req.query.saleType.toUpperCase();
     linksString += `&saleType=${req.query.saleType}`;
   }
   if (req.query.location) {
-    queryJSON.location = req.query.location;
+    queryJSON.location = req.query.location.toUpperCase();
     linksString += `&location=${req.query.location}`;
   }
 
@@ -64,10 +64,23 @@ async function findAll(req, res) {
     }
   }
 
-  res.links(links);
-  res.set('total-count', count);
-  res.set('docs-length', lots.docs.length);
-  return res.status(200).send(lots.docs);
+  const meta = {
+    total_count: count,
+    pages_count: lots.pages,
+    doc_length: lots.docs.length,
+    page: lots.page,
+    links,
+  };
+
+  // res.links(links);
+
+  // res.set('X-Total-Count', count);
+  // res.set('X-Pages-Count', lots.pages);
+  // res.set('X-Docs-Length', lots.docs.length);
+  return res.status(200).send({
+    documents: lots.docs,
+    meta,
+  });
 }
 
 function findOne(req, res) {
