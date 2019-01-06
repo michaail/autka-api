@@ -22,7 +22,7 @@ function create(req, res) {
 
 function findAll(req, res) {
   Make.find().then((makeArray) => {
-    res.status(200).send(makeArray);
+    res.status(200).send({ documents: makeArray });
   }).catch((err) => {
     res.status(404).send({
       message: `Make array not found ${err.message}`,

@@ -9,21 +9,21 @@ const makeSchema = new Schema({
   timestamps: true,
 });
 
-module.exports.Make = {
-  model: mongoose.model('Make', makeSchema),
+// module.exports.Make = {
+//   model: mongoose.model('Make', makeSchema),
 
-  existsInDB(name) {
-    this.model.findOne({ make: name })
-      .then((makeObj) => {
-        if (!makeObj) {
-          return false;
-        }
-        return true;
-      }).catch(() => false);
-  },
+//   existsInDB(name) {
+//     this.model.findOne({ make: name })
+//       .then((makeObj) => {
+//         if (!makeObj) {
+//           return false;
+//         }
+//         return true;
+//       }).catch(() => false);
+//   },
 
 
-};
+// };
 
 
 module.exports = mongoose.model('Make', makeSchema);

@@ -20,7 +20,7 @@ function create(req, res) {
     });
 }
 
-async function findAll(req, res) {
+function findAll(req, res) {
   const queryJSON = {};
   let linksString = '';
   if (req.query.make) {
@@ -51,35 +51,42 @@ async function findAll(req, res) {
     limit: parseInt(req.query.per_page, 10) || 20,
     page: parseInt(req.query.page, 10) || 1,
   });
-  const countPromise = Lot.countDocuments();
-  // TODO try catch?
-  const [lots, count] = await Promise.all([lotPromise, countPromise]);
-  const links = {};
-  if (lots.pages) {
-    if (lots.page < lots.pages) {
-      links.next = `${req.protocol}://${req.get('host')}${req.path}?page=${parseInt(lots.page, 10) + 1}${linksString}`;
+  const countPromise = Lot.estimatedDocumentCount({});
+
+  let lots;
+  let count;
+  Promise.all([lotPromise, countPromise]).then((values) => {
+    [lots, count] = values;
+
+    const links = {};
+    if (lots.pages) {
+      if (lots.page < lots.pages) {
+        links.next = `${req.protocol}://${req.get('host')}${req.path}?page=${parseInt(lots.page, 10) + 1}${linksString}`;
+      }
+      if (lots.page > 1) {
+        links.previous = `${req.protocol}://${req.get('host')}${req.path}?page=${parseInt(lots.page, 10) - 1}${linksString}`;
+      }
     }
-    if (lots.page > 1) {
-      links.previous = `${req.protocol}://${req.get('host')}${req.path}?page=${parseInt(lots.page, 10) - 1}${linksString}`;
-    }
-  }
 
-  const meta = {
-    total_count: count,
-    pages_count: lots.pages,
-    doc_length: lots.docs.length,
-    page: lots.page,
-    links,
-  };
+    const meta = {
+      totalCount: count,
+      pagesCount: lots.pages,
+      docLength: lots.docs.length,
+      page: lots.page,
+      links,
+    };
 
-  // res.links(links);
+    // const docsRaw = lots.docs.map((doc) => {
+    //   if (doc.price !== undefined) {
+    //     doc.priceInt = Number(doc.price.replace(/[^0-9.]+/g, ''));
+    //   }
+    //   return doc;
+    // });
 
-  // res.set('X-Total-Count', count);
-  // res.set('X-Pages-Count', lots.pages);
-  // res.set('X-Docs-Length', lots.docs.length);
-  return res.status(200).send({
-    documents: lots.docs,
-    meta,
+    res.status(200).send(JSON.stringify({
+      documents: lots.docs,
+      meta,
+    }));
   });
 }
 
@@ -109,7 +116,7 @@ function update(req, res) {
           message: `No lot with id: ${req.params.lotID}`,
         });
       }
-      return res.send(lot);
+      return res.status(200).send(lot);
     }).catch((err) => {
       if (err.kind === 'ObjectId') {
         return res.status(404).send({
