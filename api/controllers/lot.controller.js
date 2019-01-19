@@ -22,22 +22,22 @@ function create(req, res) {
 
 function findAll(req, res) {
   const queryJSON = {};
-  let linksString = '';
+  // let linksString = '';
   if (req.query.make) {
     queryJSON.make = req.query.make.toUpperCase();
-    linksString += `&make=${req.query.make}`;
+    // linksString += `&make=${req.query.make}`;
   }
   if (req.query.model) {
     queryJSON.model = req.query.model.toUpperCase();
-    linksString += `&model=${req.query.model}`;
+    // linksString += `&model=${req.query.model}`;
   }
   if (req.query.saleType) {
     queryJSON.saleType = req.query.saleType.toUpperCase();
-    linksString += `&saleType=${req.query.saleType}`;
+    // linksString += `&saleType=${req.query.saleType}`;
   }
   if (req.query.location) {
     queryJSON.location = req.query.location.toUpperCase();
-    linksString += `&location=${req.query.location}`;
+    // linksString += `&location=${req.query.location}`;
   }
 
   // Lot.find().then((lots) => {
@@ -47,33 +47,37 @@ function findAll(req, res) {
   // })
 
 
-  const lotPromise = Lot.paginate(queryJSON, {
-    limit: parseInt(req.query.per_page, 10) || 20,
-    page: parseInt(req.query.page, 10) || 1,
-  });
+  // const lotPromise = Lot.paginate(queryJSON, {
+  //   limit: parseInt(req.query.per_page, 10) || 20,
+  //   page: parseInt(req.query.page, 10) || 1,
+  // });
+  const perPage = parseInt(req.query.per_page, 10) || 20;
+  const page = parseInt(req.query.page, 10) || 1;
+  const lotsPromise = Lot.find()
+    .skip((page - 1) * perPage)
+    .limit(perPage);
   const countPromise = Lot.estimatedDocumentCount({});
 
-  let lots;
+  let documents;
   let count;
-  Promise.all([lotPromise, countPromise]).then((values) => {
-    [lots, count] = values;
+  Promise.all([lotsPromise, countPromise]).then((values) => {
+    [documents, count] = values;
 
-    const links = {};
-    if (lots.pages) {
-      if (lots.page < lots.pages) {
-        links.next = `${req.protocol}://${req.get('host')}${req.path}?page=${parseInt(lots.page, 10) + 1}${linksString}`;
-      }
-      if (lots.page > 1) {
-        links.previous = `${req.protocol}://${req.get('host')}${req.path}?page=${parseInt(lots.page, 10) - 1}${linksString}`;
-      }
-    }
+    // const links = {};
+    // if (lots.pages) {
+    //   if (lots.page < lots.pages) {
+    //     links.next = `${req.protocol}://${req.get('host')}${req.path}?page=${parseInt(lots.page, 10) + 1}${linksString}`;
+    //   }
+    //   if (lots.page > 1) {
+    //     links.previous = `${req.protocol}://${req.get('host')}${req.path}?page=${parseInt(lots.page, 10) - 1}${linksString}`;
+    //   }
+    // }
 
     const meta = {
       totalCount: count,
-      pagesCount: lots.pages,
-      docLength: lots.docs.length,
-      page: lots.page,
-      links,
+      pagesCount: Math.ceil(count / (parseInt(req.query.per_page, 10) || 20)),
+      docLength: documents.length,
+      page: (parseInt(req.query.page, 10) || 1),
     };
 
     // const docsRaw = lots.docs.map((doc) => {
@@ -84,7 +88,7 @@ function findAll(req, res) {
     // });
 
     res.status(200).send(JSON.stringify({
-      documents: lots.docs,
+      documents,
       meta,
     }));
   });

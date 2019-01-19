@@ -5,5 +5,5 @@ module.exports = (app) => {
 
   app.get('/api/makes', make.findAll);
 
-  app.put('/api/makes/:make', make.update);
+  app.put('/api/makes/', make.update);
 };
