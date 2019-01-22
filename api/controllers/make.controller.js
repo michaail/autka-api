@@ -37,15 +37,6 @@ async function findAll(req, res) {
   });
 
   return res.status(200).send(makesObject);
-
-
-  // Make.find().then((makeArray) => {
-  //   res.status(200).send({ documents: makeArray });
-  // }).catch((err) => {
-  //   res.status(404).send({
-  //     message: `Make array not found ${err.message}`,
-  //   });
-  // });
 }
 
 function update(req, res) {
