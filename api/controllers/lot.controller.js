@@ -1,3 +1,4 @@
+const querystring = require('querystring');
 const Lot = require('../../models/lot');
 
 // eslint-disable-next-line consistent-return
@@ -21,71 +22,45 @@ function create(req, res) {
 }
 
 function findAll(req, res) {
-  const queryJSON = {};
-  // let linksString = '';
-  if (req.query.make) {
-    queryJSON.make = req.query.make.toUpperCase();
-    // linksString += `&make=${req.query.make}`;
-  }
-  if (req.query.model) {
-    queryJSON.model = req.query.model.toUpperCase();
-    // linksString += `&model=${req.query.model}`;
-  }
-  if (req.query.saleType) {
-    queryJSON.saleType = req.query.saleType.toUpperCase();
-    // linksString += `&saleType=${req.query.saleType}`;
-  }
-  if (req.query.location) {
-    queryJSON.location = req.query.location.toUpperCase();
-    // linksString += `&location=${req.query.location}`;
-  }
-
-  // Lot.find().then((lots) => {
-  //   res.status(200).send(lots);
-  // }).catch((err) => {
-  //   console.log(err.message);
-  // })
-
-
-  // const lotPromise = Lot.paginate(queryJSON, {
-  //   limit: parseInt(req.query.per_page, 10) || 20,
-  //   page: parseInt(req.query.page, 10) || 1,
-  // });
-  const perPage = parseInt(req.query.per_page, 10) || 20;
+  const perPage = parseInt(req.query.perPage, 10) || 20;
   const page = parseInt(req.query.page, 10) || 1;
-  const lotsPromise = Lot.find()
+
+  const { make, model, buyer } = req.query;
+
+  const filters = {};
+  if (make) {
+    filters.make = make;
+  }
+  if (model) {
+    filters.model = model;
+  }
+  if (buyer) {
+    filters.buyer = buyer;
+  }
+
+  const lotsPromise = Lot.find(filters)
+    .sort({ _id: -1 })
     .skip((page - 1) * perPage)
     .limit(perPage);
-  const countPromise = Lot.estimatedDocumentCount({});
+
+  let countPromise;
+  if (filters === {}) {
+    countPromise = Lot.estimatedDocumentCount(filters);
+  } else {
+    countPromise = Lot.countDocuments(filters);
+  }
 
   let documents;
   let count;
   Promise.all([lotsPromise, countPromise]).then((values) => {
     [documents, count] = values;
 
-    // const links = {};
-    // if (lots.pages) {
-    //   if (lots.page < lots.pages) {
-    //     links.next = `${req.protocol}://${req.get('host')}${req.path}?page=${parseInt(lots.page, 10) + 1}${linksString}`;
-    //   }
-    //   if (lots.page > 1) {
-    //     links.previous = `${req.protocol}://${req.get('host')}${req.path}?page=${parseInt(lots.page, 10) - 1}${linksString}`;
-    //   }
-    // }
-
     const meta = {
       totalCount: count,
       pagesCount: Math.ceil(count / (parseInt(req.query.per_page, 10) || 20)),
       docLength: documents.length,
-      page: (parseInt(req.query.page, 10) || 1),
+      page,
     };
-
-    // const docsRaw = lots.docs.map((doc) => {
-    //   if (doc.price !== undefined) {
-    //     doc.priceInt = Number(doc.price.replace(/[^0-9.]+/g, ''));
-    //   }
-    //   return doc;
-    // });
 
     res.status(200).send(JSON.stringify({
       documents,
