@@ -1,4 +1,3 @@
-const querystring = require('querystring');
 const Lot = require('../../models/lot');
 
 // eslint-disable-next-line consistent-return
