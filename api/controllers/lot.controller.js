@@ -61,6 +61,7 @@ function findAll(req, res) {
       page,
     };
 
+
     res.status(200).send(JSON.stringify({
       documents,
       meta,
