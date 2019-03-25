@@ -11,7 +11,7 @@ module.exports = (app) => {
   app.get('/api/lots/:lotID', lots.findOne);
 
   // PUT    - update single lot with lotID
-  // app.put('/api/lots/:lotID', lots.update);
+  app.put('/api/lots/:lotID', lots.update);
 
   // DELETE - delete single lot with lotID
   // app.delete('/api/lots/:lotID', lots.deleteOne);

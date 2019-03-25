@@ -20,54 +20,53 @@ function create(req, res) {
     });
 }
 
-async function findAll(req, res) {
-  const queryJSON = {};
-  let linksString = '';
-  if (req.query.make) {
-    queryJSON.make = req.query.make;
-    linksString += `&make=${req.query.make}`;
+function findAll(req, res) {
+  const perPage = parseInt(req.query.perPage, 10) || 20;
+  const page = parseInt(req.query.page, 10) || 1;
+
+  const { make, model, buyer } = req.query;
+
+  const filters = {};
+  if (make) {
+    filters.make = make;
   }
-  if (req.query.model) {
-    queryJSON.model = req.query.model;
-    linksString += `&model=${req.query.model}`;
+  if (model) {
+    filters.model = model;
   }
-  if (req.query.saleType) {
-    queryJSON.saleType = req.query.saleType;
-    linksString += `&saleType=${req.query.saleType}`;
-  }
-  if (req.query.location) {
-    queryJSON.location = req.query.location;
-    linksString += `&location=${req.query.location}`;
+  if (buyer) {
+    filters.buyer = buyer;
   }
 
-  // Lot.find().then((lots) => {
-  //   res.status(200).send(lots);
-  // }).catch((err) => {
-  //   console.log(err.message);
-  // })
+  const lotsPromise = Lot.find(filters)
+    .sort({ _id: -1 })
+    .skip((page - 1) * perPage)
+    .limit(perPage);
+
+  let countPromise;
+  if (filters === {}) {
+    countPromise = Lot.estimatedDocumentCount(filters);
+  } else {
+    countPromise = Lot.countDocuments(filters);
+  }
+
+  let documents;
+  let count;
+  Promise.all([lotsPromise, countPromise]).then((values) => {
+    [documents, count] = values;
+
+    const meta = {
+      totalCount: count,
+      pagesCount: Math.ceil(count / (parseInt(req.query.per_page, 10) || 20)),
+      docLength: documents.length,
+      page,
+    };
 
 
-  const lotPromise = Lot.paginate(queryJSON, {
-    limit: req.query.per_page || 20,
-    page: req.query.page || 1,
+    res.status(200).send(JSON.stringify({
+      documents,
+      meta,
+    }));
   });
-  const countPromise = Lot.countDocuments();
-  // TODO try catch?
-  const [lots, count] = await Promise.all([lotPromise, countPromise]);
-  const links = {};
-  if (lots.pages) {
-    if (lots.page < lots.pages) {
-      links.next = `${req.protocol}://${req.get('host')}${req.path}?page=${parseInt(lots.page, 10) + 1}${linksString}`;
-    }
-    if (lots.page > 1) {
-      links.previous = `${req.protocol}://${req.get('host')}${req.path}?page=${parseInt(lots.page, 10) - 1}${linksString}`;
-    }
-  }
-
-  res.links(links);
-  res.set('total-count', count);
-  res.set('docs-length', lots.docs.length);
-  return res.status(200).send(lots.docs);
 }
 
 function findOne(req, res) {
@@ -96,7 +95,7 @@ function update(req, res) {
           message: `No lot with id: ${req.params.lotID}`,
         });
       }
-      return res.send(lot);
+      return res.status(200).send(lot);
     }).catch((err) => {
       if (err.kind === 'ObjectId') {
         return res.status(404).send({
