@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
-const dbConfig = require('./db.config');
+const config = require('../config');
 
 mongoose.Promise = global.Promise;
 
 module.exports = () => {
-  mongoose.connect(dbConfig.url, {
+  mongoose.connect(config.dbUrl, {
     useNewUrlParser: true,
   })
     .then(() => {

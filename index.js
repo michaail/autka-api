@@ -14,11 +14,6 @@ require('./mongo/db')();
 require('./api/routes/lot.routes')(app);
 require('./api/routes/make.routes')(app);
 
-// app.use((err, req, res) => {
-//   console.log(err);
-//   res.status(422).send({ errMSg: err.message });
-// });
-
 app.listen(3001, () => {
   console.log('listening on 3001');
 });
