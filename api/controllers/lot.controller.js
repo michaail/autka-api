@@ -130,8 +130,38 @@ function deleteOne(req, res) {
     });
 }
 
+function search(req, res) {
+  const { perPage, page, filters } = req.body;
+
+  const lotsPromise = Lot.find(filters)
+    .sort({ _id: -1 })
+    .skip((page - 1) * perPage)
+    .limit(perPage);
+
+  const countPromise = Lot.countDocuments(filters);
+
+  let documents;
+  let count;
+  Promise.all([lotsPromise, countPromise]).then((values) => {
+    [documents, count] = values;
+
+    const meta = {
+      totalCount: count,
+      pagesCount: Math.ceil(count / (parseInt(perPage, 10) || 20)),
+      docLength: documents.length,
+      page,
+    };
+
+    res.status(200).send(JSON.stringify({
+      documents,
+      meta,
+    }));
+  });
+}
+
 module.exports.create = create;
 module.exports.findAll = findAll;
 module.exports.findOne = findOne;
 module.exports.update = update;
 module.exports.deleteOne = deleteOne;
+module.exports.search = search;
