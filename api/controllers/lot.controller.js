@@ -74,20 +74,23 @@ function findAll(req, res) {
   });
 }
 
-function findOne(req, res) {
-  Lot.findOne({ lotID: req.params.lotID })
-    .then((lot) => {
-      if (!lot) {
-        return res.status(404).send({
-          message: `No lot with lotID: ${req.params.lotID}`,
-        });
-      }
-
-      return res.send([lot]);
-    })
-    .catch(() => res.status(500).send({
+async function findOne(req, res) {
+  let lots;
+  try {
+    lots = await Lot.find({ lotID: req.params.lotID })
+      .sort({ _id: -1 })
+      .limit(20);
+  } catch (e) {
+    return res.status(500).send({
       message: `Error something went wrong whilst get lot with id: ${req.params.lotID}`,
-    }));
+    });
+  }
+  if (!lots) {
+    return res.status(404).send({
+      message: `No lot with lotID: ${req.params.lotID}`,
+    });
+  }
+  return res.send(lots);
 }
 
 function update(req, res) {
