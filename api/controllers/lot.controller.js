@@ -24,7 +24,9 @@ function findAll(req, res) {
   const perPage = parseInt(req.query.perPage, 10) || 20;
   const page = parseInt(req.query.page, 10) || 1;
 
-  const { make, model, buyer } = req.query;
+  const {
+    make, model, buyer, location,
+  } = req.query;
 
   const filters = {};
   if (make) {
@@ -35,6 +37,9 @@ function findAll(req, res) {
   }
   if (buyer) {
     filters.buyer = buyer;
+  }
+  if (location) {
+    filters.location = location;
   }
 
   const lotsPromise = Lot.find(filters)
