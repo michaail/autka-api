@@ -138,13 +138,16 @@ function deleteOne(req, res) {
     });
 }
 
-function search(req, res) {
-  const { perPage, page, filters } = req.body;
+function find(req, res) {
+  const { pagination, search, filters } = req.body;
+  const { current, pageSize } = pagination;
+
+
 
   const lotsPromise = Lot.find(filters)
     .sort({ _id: -1 })
-    .skip((page - 1) * perPage)
-    .limit(perPage);
+    .skip((current - 1) * pageSize)
+    .limit(pageSize);
 
   const countPromise = Lot.countDocuments(filters);
 
@@ -155,9 +158,9 @@ function search(req, res) {
 
     const meta = {
       totalCount: count,
-      pagesCount: Math.ceil(count / (parseInt(perPage, 10) || 20)),
+      pagesCount: Math.ceil(count / (parseInt(pageSize, 10) || 20)),
       docLength: documents.length,
-      page,
+      page: current,
     };
 
     res.status(200).send(JSON.stringify({
@@ -172,4 +175,4 @@ module.exports.findAll = findAll;
 module.exports.findOne = findOne;
 module.exports.update = update;
 module.exports.deleteOne = deleteOne;
-module.exports.search = search;
+module.exports.find = find;

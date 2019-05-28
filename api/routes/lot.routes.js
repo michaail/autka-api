@@ -14,7 +14,7 @@ module.exports = (app) => {
   app.put('/api/lots/:lotID', lots.update);
 
   // POST   - search for lots (search filters in body)
-  app.post('/api/lots/search', lots.search);
+  app.post('/api/lots/search', lots.find);
 
   // DELETE - delete single lot with lotID
   // app.delete('/api/lots/:lotID', lots.deleteOne);
