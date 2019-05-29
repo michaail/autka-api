@@ -142,14 +142,42 @@ async function find(req, res) {
   const { pagination, search, filters } = req.body;
   const { current, pageSize } = pagination || { current: 1, pageSize: 20 };
 
-  const searchAndFilters = { ...search, ...filters };
+  const minYear = search.minYear || 1900;
+  const maxYear = search.maxYear || new Date().getFullYear() + 1;
+  let year;
 
-  const documents = await Lot.find(searchAndFilters)
+  if (search.minYear || search.maxYear) {
+    year = { $gte: minYear, $lte: maxYear };
+  }
+
+  const minPrice = search.minPrice || undefined;
+  const maxPrice = search.maxPrice || undefined;
+  let priceInt;
+
+  if (search.minPrice && !search.maxPrice) {
+    priceInt = { $gte: minPrice };
+  } else if (search.maxPrice && !search.minPrice) {
+    priceInt = { $lte: maxPrice };
+  } else if (search.minPrice && search.maxPrice) {
+    priceInt = { $gte: minPrice, $lte: maxPrice };
+  }
+
+  const searchReady = {
+    make: search.make || undefined,
+    model: search.model || undefined,
+    year,
+    priceInt,
+  };
+
+  const searchString = await JSON.stringify({ ...searchReady, ...filters });
+  const searchObject = await JSON.parse(searchString);
+
+  const documents = await Lot.find(searchObject)
     .sort({ _id: -1 })
     .skip((current - 1) * pageSize)
     .limit(pageSize);
 
-  const count = await Lot.countDocuments(searchAndFilters);
+  const count = await Lot.countDocuments(searchObject);
 
   const meta = {
     totalCount: count,
