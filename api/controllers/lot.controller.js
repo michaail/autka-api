@@ -138,36 +138,30 @@ function deleteOne(req, res) {
     });
 }
 
-function find(req, res) {
+async function find(req, res) {
   const { pagination, search, filters } = req.body;
-  const { current, pageSize } = pagination;
+  const { current, pageSize } = pagination || { current: 1, pageSize: 20 };
 
+  const searchAndFilters = { ...search, ...filters };
 
-
-  const lotsPromise = Lot.find(filters)
+  const documents = await Lot.find(searchAndFilters)
     .sort({ _id: -1 })
     .skip((current - 1) * pageSize)
     .limit(pageSize);
 
-  const countPromise = Lot.countDocuments(filters);
+  const count = await Lot.countDocuments(searchAndFilters);
 
-  let documents;
-  let count;
-  Promise.all([lotsPromise, countPromise]).then((values) => {
-    [documents, count] = values;
+  const meta = {
+    totalCount: count,
+    pagesCount: Math.ceil(count / (parseInt(pageSize, 10) || 20)),
+    docLength: documents.length,
+    page: current,
+  };
 
-    const meta = {
-      totalCount: count,
-      pagesCount: Math.ceil(count / (parseInt(pageSize, 10) || 20)),
-      docLength: documents.length,
-      page: current,
-    };
-
-    res.status(200).send(JSON.stringify({
-      documents,
-      meta,
-    }));
-  });
+  return res.status(200).send(JSON.stringify({
+    documents,
+    meta,
+  }));
 }
 
 module.exports.create = create;

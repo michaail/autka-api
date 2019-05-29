@@ -17,11 +17,12 @@
   "author": "Michaail",
   "license": "ISC",
   "dependencies": {
-    "axios": "^0.18.0", 
+    "axios": "^0.18.0",
     "body-parser": "^1.18.3",
     "cors": "^2.8.5",
     "express": "^4.16.4",
-    "mongoose": "^5.4.19"
+    "mongoose": "^5.4.19",
+    "nodemon": "^1.19.1"
   },
   "devDependencies": {
     "eslint": "^5.15.3",
