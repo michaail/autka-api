@@ -1,6 +1,4 @@
 const mongoose = require('mongoose');
-// const mongoPaginate = require('mongo-cursor-pagination')
-// const mongoosePaginate = require('mongoose-paginate');
 
 const { Schema } = mongoose;
 
@@ -26,13 +24,6 @@ const lotSchema = new Schema({
 }, {
   timestamps: true,
 });
-
-// lotSchema.plugin(mongoosePaginate);
-// lotSchema.plugin(mongoPaginate.mongoosePlugin);
-
-// module.exports.Lot = {
-//   model: mongoose.model('Lot', lotSchema),
-// };
 
 
 module.exports = mongoose.model('Lot', lotSchema);

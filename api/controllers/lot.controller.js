@@ -1,7 +1,7 @@
 const Lot = require('../../models/lot');
 
-// eslint-disable-next-line consistent-return
-function create(req, res) {
+// POST -- new lot
+async function create(req, res) {
   if (!req.body.lotID) {
     return res.status(400).send({
       message: "Lot can't be created without lotID",
@@ -9,18 +9,19 @@ function create(req, res) {
   }
 
   const lot = new Lot(req.body);
-
-  lot.save()
-    .then((data) => {
-      res.send(data);
-    }).catch((err) => {
-      res.status(500).send({
-        message: err.message || 'Something went wrong whilst saving lot',
-      });
+  let result;
+  try {
+    result = await lot.save();
+  } catch (e) {
+    return res.status(500).send({
+      message: e.message || 'Something went wrong whilst saving lot',
     });
+  }
+  return res.status(200).send(result);
 }
 
-function findAll(req, res) {
+// GET -- all using queryString
+async function findAll(req, res) {
   const perPage = parseInt(req.query.perPage, 10) || 20;
   const page = parseInt(req.query.page, 10) || 1;
 
@@ -42,38 +43,42 @@ function findAll(req, res) {
     filters.location = location;
   }
 
-  const lotsPromise = Lot.find(filters)
-    .sort({ _id: -1 })
-    .skip((page - 1) * perPage)
-    .limit(perPage);
-
-  let countPromise;
-  if (filters === {}) {
-    countPromise = Lot.estimatedDocumentCount(filters);
-  } else {
-    countPromise = Lot.countDocuments(filters);
+  let lots;
+  try {
+    lots = await Lot.find(filters)
+      .sort({ _id: -1 })
+      .skip((page - 1) * perPage)
+      .limit(perPage);
+  } catch (e) {
+    return res.status(404).send();
   }
 
-  let documents;
   let count;
-  Promise.all([lotsPromise, countPromise]).then((values) => {
-    [documents, count] = values;
+  try {
+    if (filters === {}) {
+      count = await Lot.estimatedDocumentCount(filters);
+    } else {
+      count = await Lot.countDocuments(filters);
+    }
+  } catch (e) {
+    return res.status(404).send();
+  }
 
-    const meta = {
-      totalCount: count,
-      pagesCount: Math.ceil(count / (parseInt(req.query.per_page, 10) || 20)),
-      docLength: documents.length,
-      page,
-    };
+  const meta = {
+    totalCount: count,
+    pagesCount: Math.ceil(count / (parseInt(req.query.per_page, 10) || 20)),
+    docLength: lots.length,
+    page,
+  };
 
 
-    res.status(200).send(JSON.stringify({
-      documents,
-      meta,
-    }));
-  });
+  return res.status(200).send(JSON.stringify({
+    documents: lots,
+    meta,
+  }));
 }
 
+// GET -- all entries for one lotID
 async function findOne(req, res) {
   let lots;
   try {
@@ -90,54 +95,64 @@ async function findOne(req, res) {
       message: `No lot with lotID: ${req.params.lotID}`,
     });
   }
-  return res.send(lots);
+  return res.status(200).send(lots);
 }
 
-function update(req, res) {
-  Lot.findOneAndUpdate({ lotID: req.params.lotID },
-    req.body,
-    { new: true }) // zwraca zmodyfikowany dokument do then()
-    .then((lot) => {
-      if (!lot) {
-        return res.status(404).send({
-          message: `No lot with id: ${req.params.lotID}`,
-        });
-      }
-      return res.status(200).send(lot);
-    }).catch((err) => {
-      if (err.kind === 'ObjectId') {
-        return res.status(404).send({
-          message: `No lot with id: ${req.params.lotID}`,
-        });
-      }
-      return res.status(500).send({
-        message: `Error with update lot with id: ${req.params.lotID}`,
+// PUT -- not used rn
+async function update(req, res) {
+  const { lotID } = req.params;
+  let result;
+
+  try {
+    result = await Lot.findOneAndUpdate({ lotID },
+      req.body,
+      { new: true });
+  } catch (e) {
+    if (e.kind === 'ObjectId') {
+      return res.status(404).send({
+        message: `No lot with id: ${lotID}`,
       });
+    }
+    return res.status(500).send({
+      message: `Error with update lot with id: ${lotID}`,
     });
+  }
+
+  if (!result) {
+    return res.status(404).send({
+      message: `No lot with id: ${lotID}`,
+    });
+  }
+  return res.status(200).send(result);
 }
 
-function deleteOne(req, res) {
-  Lot.findOneAndRemove({ lotID: req.params.lotID })
-    .then((lot) => {
-      if (!lot) {
-        return res.status(404).send({
-          message: `user${req.params.lotID}`,
-        });
-      }
-      return res.send({ message: 'Lot deleted!' });
-    })
-    .catch((err) => {
-      if (err.kind === 'ObjectId' || err.name === 'NotFound') {
-        return res.status(404).send({
-          message: `user${req.params.lotID}`,
-        });
-      }
-      return res.status(500).send({
-        message: `Error with delete lot with id: ${req.params.lotID}`,
+// DELETE -- not used rn
+async function deleteOne(req, res) {
+  const { lotID } = req.params;
+  let result;
+
+  try {
+    Lot.findOneAndRemove({ lotID });
+  } catch (e) {
+    if (e.kind === 'ObjectId' || e.name === 'NotFound') {
+      return res.status(404).send({
+        message: `user${lotID}`,
       });
+    }
+    return res.status(500).send({
+      message: `Error with delete lot with id: ${lotID}`,
     });
+  }
+
+  if (!result) {
+    return res.status(404).send({
+      message: `user${lotID}`,
+    });
+  }
+  return res.status(200).send({ message: `Lot: ${lotID} - deleted!` });
 }
 
+// POST -- search using req body
 async function find(req, res) {
   const { pagination, search, filters } = req.body;
   const { current, pageSize } = pagination || { current: 1, pageSize: 20 };
