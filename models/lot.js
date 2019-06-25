@@ -25,5 +25,28 @@ const lotSchema = new Schema({
   timestamps: true,
 });
 
+lotSchema.statics = {
+  async getAllAuctionsByLotID(lotID, sort, limit) {
+    try {
+      return this.find({ lotID })
+        .sort({ _id: sort || -1 })
+        .limit(limit || 20);
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  async getAllAuctionsByFilters(filters, sort, pagination) {
+    const { page, pageSize } = pagination;
+    try {
+      return this.find(filters)
+        .sort({ _id: sort || -1 })
+        .skip((page - 1) * pageSize)
+        .limit(pageSize);
+    } catch (error) {
+      throw error;
+    }
+  },
+};
 
 module.exports = mongoose.model('Lot', lotSchema);

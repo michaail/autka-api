@@ -22,8 +22,12 @@ async function create(req, res) {
 
 // GET -- all using queryString
 async function findAll(req, res) {
-  const perPage = parseInt(req.query.perPage, 10) || 20;
+  const pageSize = parseInt(req.query.pageSize, 10) || 20;
   const page = parseInt(req.query.page, 10) || 1;
+  const pagination = {
+    pageSize,
+    page,
+  };
 
   const {
     make, model, buyer, location,
@@ -45,10 +49,7 @@ async function findAll(req, res) {
 
   let lots;
   try {
-    lots = await Lot.find(filters)
-      .sort({ _id: -1 })
-      .skip((page - 1) * perPage)
-      .limit(perPage);
+    lots = await Lot.getAllAuctionsByFilters(filters, -1, pagination);
   } catch (e) {
     return res.status(404).send();
   }
@@ -80,19 +81,19 @@ async function findAll(req, res) {
 
 // GET -- all entries for one lotID
 async function findOne(req, res) {
+  const { lotID } = req.params;
   let lots;
+
   try {
-    lots = await Lot.find({ lotID: req.params.lotID })
-      .sort({ _id: -1 })
-      .limit(20);
+    lots = await Lot.getAllAuctionsByLotID(lotID);
   } catch (e) {
     return res.status(500).send({
-      message: `Error something went wrong whilst get lot with id: ${req.params.lotID}`,
+      message: `Error something went wrong whilst get lot with id: ${lotID}`,
     });
   }
   if (!lots) {
     return res.status(404).send({
-      message: `No lot with lotID: ${req.params.lotID}`,
+      message: `No lot with lotID: ${lotID}`,
     });
   }
   return res.status(200).send(lots);
@@ -155,7 +156,7 @@ async function deleteOne(req, res) {
 // POST -- search using req body
 async function find(req, res) {
   const { pagination, search, filters } = req.body;
-  const { current, pageSize } = pagination || { current: 1, pageSize: 20 };
+  const { page, pageSize } = pagination || { page: 1, pageSize: 20 };
 
   const minYear = search.minYear || 1900;
   const maxYear = search.maxYear || new Date().getFullYear() + 1;
@@ -187,10 +188,14 @@ async function find(req, res) {
   const searchString = await JSON.stringify({ ...searchReady, ...filters });
   const searchObject = await JSON.parse(searchString);
 
-  const documents = await Lot.find(searchObject)
-    .sort({ _id: -1 })
-    .skip((current - 1) * pageSize)
-    .limit(pageSize);
+  let documents;
+  try {
+    documents = await Lot.getAllAuctionsByFilters(searchObject, -1, pagination);
+  } catch (error) {
+    return res.status(500).send({
+      message: 'internal server error',
+    });
+  }
 
   const count = await Lot.countDocuments(searchObject);
 
@@ -198,7 +203,7 @@ async function find(req, res) {
     totalCount: count,
     pagesCount: Math.ceil(count / (parseInt(pageSize, 10) || 20)),
     docLength: documents.length,
-    page: current,
+    page,
   };
 
   return res.status(200).send(JSON.stringify({
